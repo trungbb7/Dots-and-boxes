@@ -65,7 +65,7 @@ public class AIPlayer {
 			int score = evaluate(horizontalLines, verticalLines);
 			return new MoveWithScore(-1, -1, false, score);
 		}
-		Move rsMove = null;
+		Move rsMove = new Move(0, 0, false);
 		int rsScore;
 		if (isMax) {
 			rsScore = Integer.MIN_VALUE;

@@ -6,6 +6,7 @@ import java.awt.Graphics;
 import javax.swing.JPanel;
 
 import controller.GameController;
+import controller.GameManager;
 
 public class GamePanel extends JPanel {
 

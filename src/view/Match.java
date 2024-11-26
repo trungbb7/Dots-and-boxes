@@ -8,11 +8,12 @@ import java.awt.event.MouseListener;
 import javax.swing.JButton;
 import javax.swing.JPanel;
 
+import controller.GameManager;
 import controller.MatchButtonController;
 
 public class Match extends JPanel {
 
-	GamePanel gamePanel;
+	public GamePanel gamePanel;
 	JPanel top;
 
 	public Match() {
@@ -45,4 +46,6 @@ public class Match extends JPanel {
 			this.add(replayBtn);
 		}
 	}
+	
+	
 }

@@ -1,6 +1,6 @@
 package test;
 
-import view.GameManager;
+import controller.GameManager;
 
 public class DotsAndBoxes {
 	public static void main(String[] args) {

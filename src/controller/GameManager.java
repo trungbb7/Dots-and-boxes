@@ -1,4 +1,4 @@
-package view;
+package controller;
 
 import java.awt.CardLayout;
 import java.awt.Container;
@@ -11,9 +11,12 @@ import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
-import controller.HomeController;
 import model.AIPlayer;
 import model.Move;
+import view.GamePanel;
+import view.Home;
+import view.Match;
+import view.Option;
 
 public class GameManager {
 	private static GameManager uniqueInstance;
@@ -27,15 +30,16 @@ public class GameManager {
 	public int[][] verticalLines;
 	public int[][] boxes;
 	public int boardSize = 5;
+	public boolean isFinish;
 
 	private GamePanel gamePanel;
 	private AIPlayer aiPlayer;
-	private int currentPlayer; // Lượt chơi hiện tại (1: người chơi, 2: máy)
+	private int currentPlayer;
 	private int playerScore;
 	private int aiScore;
 	private int aiLevel;
 
-	JFrame frame;
+	public JFrame frame;
 
 	public CardLayout card;
 	private Container container;
@@ -114,6 +118,7 @@ public class GameManager {
 		this.horizontalLines = new int[boardSize + 1][boardSize];
 		this.verticalLines = new int[boardSize][boardSize + 1];
 		this.boxes = new int[boardSize][boardSize];
+		this.isFinish = false;
 
 		this.container.add("match", this.match);
 		this.card.show(container, "match");
@@ -141,26 +146,27 @@ public class GameManager {
 					currentPlayer = BOT;
 					checkFinished();
 
-					Move botMove;
-					do {
-						botMove = aiPlayer.makeMove(horizontalLines, verticalLines, boxes);
-						if (botMove.isHorizontal()) {
-							horizontalLines[botMove.getRow()][botMove.getCol()] = BOT_SIGN;
-						} else {
-							verticalLines[botMove.getRow()][botMove.getCol()] = BOT_SIGN;
-						}
-						gamePanel.repaint();
+						Move botMove;
+						do {
+							if(isFinish) break;
+							botMove = aiPlayer.makeMove(horizontalLines, verticalLines, boxes);
+							if (botMove.isHorizontal()) {
+								horizontalLines[botMove.getRow()][botMove.getCol()] = BOT_SIGN;
+							} else {
+								verticalLines[botMove.getRow()][botMove.getCol()] = BOT_SIGN;
+							}
+							gamePanel.repaint();
 
-						checkFinished();
-					} while (checkAndMarkBox(botMove, BOT_SIGN));
-					// Chuyển lượt chơi
-					currentPlayer = PLAYER;
+							checkFinished();
+						} while (checkAndMarkBox(botMove, BOT_SIGN));
+						// Chuyển lượt chơi
+						currentPlayer = PLAYER;
+					}
 
 				}
 				checkFinished();
 
 			}
-		}
 
 	}
 
@@ -223,6 +229,7 @@ public class GameManager {
 					return false;
 			}
 		}
+		this.isFinish = true;
 		return true;
 	}
 
@@ -264,4 +271,5 @@ public class GameManager {
 
 		return false;
 	}
+
 }

@@ -5,7 +5,6 @@ import java.awt.event.MouseEvent;
 import java.io.FileWriter;
 import java.io.IOException;
 
-import view.GameManager;
 import view.Option;
 
 public class ApplyButtonController extends MouseAdapter {

@@ -4,7 +4,6 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
 import model.Move;
-import view.GameManager;
 import view.GamePanel;
 
 public class GameController extends MouseAdapter {
@@ -51,6 +50,8 @@ public class GameController extends MouseAdapter {
 				col = lineX;
 				isHorizontal = false;
 			}
+			
+		
 			gameManager.updateGameState(new Move(row, col, isHorizontal));
 		}
 
@@ -60,7 +61,8 @@ public class GameController extends MouseAdapter {
 		GameManager gameManager = GameManager.getInstance();
 		int spacing = gamePanel.getSpacing();
 		int dotSize = gamePanel.getDotSize();
-		int nearestLine = -1;
+//		int nearestLine = -1;
+		int nearestLine = 0;
 		double minDistance = Double.MAX_VALUE;
 
 		for (int i = 0; i <= gameManager.boardSize; i++) {
@@ -73,7 +75,8 @@ public class GameController extends MouseAdapter {
 		}
 		// Kiểm tra xem khoảng cách có đủ gần để vẽ đường kẻ không
 		if (minDistance > dotSize) {
-			return -1;
+//			return -1;
+			return 0;
 		}
 		return nearestLine;
 	}

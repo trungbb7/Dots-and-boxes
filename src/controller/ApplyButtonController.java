@@ -31,6 +31,7 @@ public class ApplyButtonController extends MouseAdapter {
 			gameManager.boardSize = Integer.parseInt(typeConfig);
 			FileWriter fileWriter = new FileWriter("src\\config");
 			fileWriter.write("level:" + levelConfig + "\ntype:" + typeConfig);
+			gameManager.aiLevel = Integer.parseInt(levelConfig);
 			fileWriter.close();
 		} catch (IOException e) {
 			e.printStackTrace();

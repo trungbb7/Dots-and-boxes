@@ -2,17 +2,11 @@ package model;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
-
-import controller.GameManager;
 
 public class AIPlayer {
 
-	public static final int EASY_LEVEL = 1;
-	public static final int MEDIUM_LEVEL = 2;
-	public static final int HARD_LEVEL = 3;
 
-	// Thuộc tính và phương thức cho AI
+
 	private int level;
 
 	public AIPlayer(int level) {
@@ -21,7 +15,10 @@ public class AIPlayer {
 
 	public Move makeMove(int[][] horizontalLines, int[][] verticalLines, int[][] boxes) {
 
-		MoveWithScore mwc = minimax(horizontalLines, verticalLines, true, this.level, null);
+		MoveWithScore mwc = minimax(horizontalLines, verticalLines, true, this.level, null,
+				Integer.MIN_VALUE, Integer.MAX_VALUE);
+		// System.out.println("row: " + mwc.row + " - col: " + mwc.col + " - isHorizontal: " + mwc.isHorizontal
+		// 		+ " - score: " + mwc.score);
 		return new Move(mwc.row, mwc.col, mwc.isHorizontal);
 	}
 
@@ -61,77 +58,170 @@ public class AIPlayer {
 	}
 
 	private MoveWithScore minimax(int[][] horizontalLines, int[][] verticalLines, boolean isMax, int depth,
-			Move currentMove) {
+			Move currentMove, int alpha, int beta) {
 		List<Move> availableMoves = availableMoves(horizontalLines, verticalLines);
 		if (depth <= 0 || availableMoves.isEmpty()) {
 			int score = evaluate(horizontalLines, verticalLines, currentMove, isMax);
 			return new MoveWithScore(0, 0, false, score);
 		}
+
+		// Sắp xếp nước đi để tối ưu alpha-beta pruning
+		sortMoves(availableMoves, horizontalLines, verticalLines);
+		
 		Move rsMove = new Move(0, 0, false);
 		int rsScore;
+		
 		if (isMax) {
 			rsScore = Integer.MIN_VALUE;
-			for (Move move : availableMoves) {
+			for (Move move : availableMoves) {   
 				move(move, horizontalLines, verticalLines);
-				int score = minimax(horizontalLines, verticalLines, !isMax, depth - 1, move).score;
+				int score = 0;
+				int count = countNewSquare(horizontalLines, verticalLines, move);
+				if(count > 0) {
+					score += (depth + 1) * count * 100000000;
+					// Nếu có thể tạo ô, tiếp tục lượt của mình
+					score += minimax(horizontalLines, verticalLines, true, depth - 1, move, alpha, beta).score;
+				} else {
+					score += minimax(horizontalLines, verticalLines, false, depth - 1, move, alpha, beta).score;
+				}
+				
 				if (score > rsScore) {
 					rsScore = score;
 					rsMove = move;
 				}
 				reMove(move, horizontalLines, verticalLines);
+				
+				alpha = Math.max(alpha, rsScore);
+				if (beta <= alpha) {
+					break; 
+				}
 			}
 		} else {
+			// Ngược lại cho min
 			rsScore = Integer.MAX_VALUE;
 			for (Move move : availableMoves) {
 				move(move, horizontalLines, verticalLines);
-				int score = minimax(horizontalLines, verticalLines, !isMax, depth - 1, move).score;
+				int score = 0;
+				int count = countNewSquare(horizontalLines, verticalLines, move);
+				if(count > 0) {
+					score -= (depth + 1) * count * 100000000;
+					// Nếu có thể tạo ô, tiếp tục lượt của đối thủ
+					score += minimax(horizontalLines, verticalLines, false, depth - 1, move, alpha, beta).score;
+				} else {
+					score += minimax(horizontalLines, verticalLines, true, depth - 1, move, alpha, beta).score;
+				}
+				
 				if (score < rsScore) {
 					rsScore = score;
 					rsMove = move;
 				}
 				reMove(move, horizontalLines, verticalLines);
+				
+				beta = Math.min(beta, rsScore);
+				if (beta <= alpha) {
+					break; 
+				}
 			}
 		}
+
 		return new MoveWithScore(rsMove.row, rsMove.col, rsMove.isHorizontal, rsScore);
 	}
 
-	private boolean hasNewSquare(int[][] horizontalLines, int[][] verticalLines, Move move) {
-		if(move != null) {
+	// Sắp xếp nước đi
+	private void sortMoves(List<Move> moves, int[][] horizontalLines, int[][] verticalLines) {
+		moves.sort((m1, m2) -> {
+			int score1 = getQuickMoveScore(m1, horizontalLines, verticalLines);
+			int score2 = getQuickMoveScore(m2, horizontalLines, verticalLines);
+			return Integer.compare(score2, score1); 
+		});
+	}
+
+	// Đánh giá nhanh một nước đi
+	private int getQuickMoveScore(Move move, int[][] horizontalLines, int[][] verticalLines) {
+		int score = 0;
+		
+		// Ưu tiên cao nhất cho nước đi tạo được ô
+		move(move, horizontalLines, verticalLines);
+		int squares = countNewSquare(horizontalLines, verticalLines, move);
+		reMove(move, horizontalLines, verticalLines);
+		if (squares > 0) {
+			return 1000 * squares;
+		}
+		
+		// Ưu tiên nước đi ở góc và cạnh
+		if (move.isHorizontal) {
+			if (move.row == 0 || move.row == horizontalLines.length - 1) score += 10;
+			if (move.col == 0 || move.col == horizontalLines[0].length - 1) score += 10;
+		} else {
+			if (move.col == 0 || move.col == verticalLines[0].length - 1) score += 10;
+			if (move.row == 0 || move.row == verticalLines.length - 1) score += 10;
+		}
+		
+		return score;
+	}
+
+	private int countNewSquare(int[][] horizontalLines, int[][] verticalLines, Move move) {
+		int result = 0;
+		if (move != null) {
 			boolean isHorizontal = move.isHorizontal();
 			int row = move.getRow();
 			int col = move.getCol();
 			if (isHorizontal) {
 
-				if (row > 0 && (horizontalLines[row - 1][col] != 0) && (verticalLines[row - 1][col] != 0)
-						&& (verticalLines[row - 1][col + 1] != 0)) {
-					return true;
+				if (row == 0) {
+					if (horizontalLines[row + 1][col] != 0 && (verticalLines[row][col] != 0)
+							&& (verticalLines[row][col + 1] != 0)) {
+						result++;
+					}
+				} else if (row == horizontalLines.length - 1) {
+					if (horizontalLines[row - 1][col] != 0 && (verticalLines[row - 1][col] != 0)
+							&& (verticalLines[row - 1][col + 1] != 0)) {
+						result++;
+					}
+				} else {
+					if ((horizontalLines[row - 1][col] != 0) && (verticalLines[row - 1][col] != 0)
+							&& (verticalLines[row - 1][col + 1] != 0)) {
+						result++;
+					}
+					if ((horizontalLines[row + 1][col] != 0) && (verticalLines[row][col] != 0)
+							&& (verticalLines[row][col + 1] != 0)) {
+						result++;
+					}
 				}
 
-				if ((row < verticalLines.length) && (horizontalLines[row + 1][col] != 0) && (verticalLines[row][col] != 0)
-						&& (verticalLines[row][col + 1] != 0)) {
-					return true;
-				}
 			} else {
 
-				if ((col > 0) && (verticalLines[row][col - 1] != 0) && (horizontalLines[row][col - 1] != 0)
-						&& (horizontalLines[row + 1][col - 1] != 0)) {
-					return true;
-				}
-
-				if ((col < verticalLines.length) && (verticalLines[row][col + 1] != 0) && (horizontalLines[row][col] != 0)
-						&& (horizontalLines[row + 1][col] != 0)) {
-					return true;
+				if (col == 0) {
+					if ((verticalLines[row][col + 1] != 0) && (horizontalLines[row][col] != 0)
+							&& (horizontalLines[row + 1][col] != 0)) {
+						result++;
+					}
+				} else if (col == verticalLines[0].length - 1) {
+					if ((verticalLines[row][col - 1] != 0) && (horizontalLines[row][col - 1] != 0)
+							&& (horizontalLines[row + 1][col - 1] != 0)) {
+						result++;
+						;
+					}
+				} else {
+					if ((verticalLines[row][col + 1] != 0) && (horizontalLines[row][col] != 0)
+							&& (horizontalLines[row + 1][col] != 0)) {
+						result++;
+					}
+					if ((verticalLines[row][col - 1] != 0) && (horizontalLines[row][col - 1] != 0)
+							&& (horizontalLines[row + 1][col - 1] != 0)) {
+						result++;
+					}
 				}
 			}
 
 		}
-		return false;
+		return result;
 	}
 
-	private int[] analysisSquare(int[][] horizontalLines, int[][] verticalLines) {
+	private int[] analyzeSquare(int[][] horizontalLines, int[][] verticalLines) {
 		int[] result = new int[5];
 		for (int i = 0; i < verticalLines.length; i++) {
-			for (int j = 0; j < verticalLines.length - 1; j++) {
+			for (int j = 0; j < verticalLines.length; j++) {
 				int score = 0;
 				if (horizontalLines[i][j] != 0)
 					score++;
@@ -150,34 +240,32 @@ public class AIPlayer {
 	}
 
 	private int evaluate(int[][] horizontalLines, int[][] verticalLines, Move currentMove, boolean isMax) {
+		// System.out.println("isMax: " + isMax);
 		int result = 0;
 		if (isMax) {
-			if (hasNewSquare(horizontalLines, verticalLines, currentMove)) {
-				return -10000000;
-			} else {
-				int score = 1;
-				int sign = -1;
-				int[] analysSquare = analysisSquare(horizontalLines, verticalLines);
-				for (int i = 0; i < 4; i++) {
-					result += sign * analysSquare[i] * score;
-					score *= 10;
-					sign *= -1;
-				}
+
+			result -= countNewSquare(horizontalLines, verticalLines, currentMove) * 10000000;
+
+			int score = 1;
+			int sign = -1;
+			int[] analysSquare = analyzeSquare(horizontalLines, verticalLines);
+			for (int i = 0; i < 4; i++) {
+				result += sign * analysSquare[i] * score;
+				score *= 10;
+				sign *= -1;
 			}
 
 		} else {
-			if (hasNewSquare(horizontalLines, verticalLines, currentMove)) {
-				return 10000000;
-			} else {
-				int score = 1;
-				int sign = 1;
-				int[] analysSquare = analysisSquare(horizontalLines, verticalLines);
-				for (int i = 0; i < 4; i++) {
-					result += sign * analysSquare[i] * score;
-					score *= 10;
-					sign *= -1;
-				}
+			result += countNewSquare(horizontalLines, verticalLines, currentMove) * 10000000;
+			int score = 1;
+			int sign = 1;
+			int[] analysSquare = analyzeSquare(horizontalLines, verticalLines);
+			for (int i = 0; i < 4; i++) {
+				result += sign * analysSquare[i] * score;
+				score *= 10;
+				sign *= -1;
 			}
+
 		}
 
 		return result;

@@ -1,5 +1,6 @@
 package view;
 
+import controller.ApplyButtonController;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
@@ -7,11 +8,8 @@ import java.awt.Font;
 import java.awt.GridLayout;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.util.Enumeration;
 import java.util.Scanner;
-
 import javax.swing.AbstractButton;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -20,8 +18,6 @@ import javax.swing.JButton;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.border.TitledBorder;
-
-import controller.ApplyButtonController;
 
 public class Option extends JPanel {
 
@@ -38,15 +34,15 @@ public class Option extends JPanel {
 
 		JRadioButton easyBtn = new JRadioButton("Easy");
 		easyBtn.setFont(new Font("roboto", Font.PLAIN, 14));
-		easyBtn.setActionCommand("easy");
+		easyBtn.setActionCommand("1");
 
 		JRadioButton mediumBtn = new JRadioButton("Medium");
 		mediumBtn.setFont(new Font("roboto", Font.PLAIN, 14));
-		mediumBtn.setActionCommand("medium");
+		mediumBtn.setActionCommand("2");
 
 		JRadioButton hardBtn = new JRadioButton("Hard");
 		hardBtn.setFont(new Font("roboto", Font.PLAIN, 14));
-		hardBtn.setActionCommand("hard");
+		hardBtn.setActionCommand("3");
 
 		levelP.add(easyBtn);
 		levelP.add(mediumBtn);
@@ -64,6 +60,9 @@ public class Option extends JPanel {
 		JRadioButton type3Btn = new JRadioButton("3x3");
 		type3Btn.setFont(new Font("roboto", Font.PLAIN, 14));
 		type3Btn.setActionCommand("3");
+		JRadioButton type4Btn = new JRadioButton("4x4");
+		type4Btn.setFont(new Font("roboto", Font.PLAIN, 14));
+		type4Btn.setActionCommand("4");
 		JRadioButton type5Btn = new JRadioButton("5x5");
 		type5Btn.setFont(new Font("roboto", Font.PLAIN, 14));
 		type5Btn.setActionCommand("5");
@@ -71,9 +70,11 @@ public class Option extends JPanel {
 		type6Btn.setFont(new Font("roboto", Font.PLAIN, 14));
 		type6Btn.setActionCommand("6");
 		typeP.add(type3Btn);
+		typeP.add(type4Btn);
 		typeP.add(type5Btn);
 		typeP.add(type6Btn);
 		typeBG.add(type3Btn);
+		typeBG.add(type4Btn);
 		typeBG.add(type5Btn);
 		typeBG.add(type6Btn);
 		typeP.setBorder(new TitledBorder(getBorder(), "Board type", TitledBorder.DEFAULT_JUSTIFICATION,

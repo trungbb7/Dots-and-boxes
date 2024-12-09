@@ -5,12 +5,9 @@ import java.awt.Container;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.Scanner;
-import java.util.concurrent.TimeUnit;
-
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-
 import model.AIPlayer;
 import model.Move;
 import view.GamePanel;
@@ -37,7 +34,7 @@ public class GameManager {
 	private int currentPlayer;
 	private int playerScore;
 	private int aiScore;
-	private int aiLevel;
+	public int aiLevel;
 
 	public JFrame frame;
 
@@ -47,9 +44,14 @@ public class GameManager {
 	private Match match;
 	private JPanel option;
 
+	private Move lastBotMove;
+	public boolean isHighlightingLastMove = false;
+
 	private GameManager() {
 		loadConfig();
 		init();
+
+
 	}
 
 	public static GameManager getInstance() {
@@ -74,7 +76,7 @@ public class GameManager {
 		container.add("option", option);
 		container.add(match);
 
-		frame.setSize(400, 400);
+		frame.setSize(820, 800);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setLocationRelativeTo(null);
 		frame.setVisible(true);
@@ -89,12 +91,15 @@ public class GameManager {
 			while (sc.hasNextLine()) {
 				if (count == 1) {
 					String level = sc.nextLine().split(":")[1];
-					if (level.equals("easy"))
-						this.aiLevel = AIPlayer.EASY_LEVEL;
-					else if (level.equals("medium"))
-						this.aiLevel = AIPlayer.MEDIUM_LEVEL;
-					else
-						this.aiLevel = AIPlayer.HARD_LEVEL;
+					
+					this.aiLevel = Integer.parseInt(level);
+//					if (level.equals("easy"))
+//						this.aiLevel = AIPlayer.EASY_LEVEL;
+//					else if (level.equals("medium"))
+//						this.aiLevel = AIPlayer.MEDIUM_LEVEL;
+////						this.aiLevel = 1;
+//					else
+//						this.aiLevel = AIPlayer.HARD_LEVEL;
 				} else if (count == 2) {
 					this.boardSize = Integer.parseInt(sc.nextLine().split(":")[1]);
 				}
@@ -132,6 +137,10 @@ public class GameManager {
 		this.card.show(container, "option");
 	}
 
+	public Move getLastBotMove() {
+		return lastBotMove;
+	}
+
 	public void updateGameState(Move playerMove) {
 		// Cập nhật trạng thái trò chơi (đường kẻ, ô vuông, điểm số)
 		if (!isExist(playerMove)) {
@@ -148,14 +157,27 @@ public class GameManager {
 
 						Move botMove;
 						do {
-							if(isFinish) break;
+							if(isFinish) {
+								return;
+							}
 							botMove = aiPlayer.makeMove(horizontalLines, verticalLines, boxes);
+							isHighlightingLastMove = true;
+							lastBotMove = botMove;
 							if (botMove.isHorizontal()) {
 								horizontalLines[botMove.getRow()][botMove.getCol()] = BOT_SIGN;
 							} else {
 								verticalLines[botMove.getRow()][botMove.getCol()] = BOT_SIGN;
 							}
-							gamePanel.repaint();
+							// gamePanel.repaint();
+							try {
+								gamePanel.paintImmediately(gamePanel.getBounds());
+								// timer.restart();
+								Thread.sleep(500); // Độ trễ 300ms giữa các nước đi
+								isHighlightingLastMove = false;
+								gamePanel.repaint();
+							} catch (InterruptedException e) {
+								e.printStackTrace();
+							}
 
 							checkFinished();
 						} while (checkAndMarkBox(botMove, BOT_SIGN));
@@ -164,7 +186,7 @@ public class GameManager {
 					}
 
 				}
-				checkFinished();
+			checkFinished();
 
 			}
 
